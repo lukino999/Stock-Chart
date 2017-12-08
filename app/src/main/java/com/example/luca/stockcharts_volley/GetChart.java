@@ -17,9 +17,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 public class GetChart extends AppCompatActivity {
 
-    String url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=1min&apikey=M131GCLA5V2D33ZH";
+    // https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo
+    String url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=M131GCLA5V2D33ZH";
+
+    //String url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=1min&apikey=M131GCLA5V2D33ZH";
 
     JSONObject data;
 
@@ -37,13 +44,13 @@ public class GetChart extends AppCompatActivity {
 
     private void getData(String url) {
 
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        final RequestQueue requestQueue = Volley.newRequestQueue(this);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 data = response;
-                Log.i("getData", data.toString());
+                logJSONobject(response);
             }
         }, new Response.ErrorListener() {
             @Override
@@ -53,6 +60,42 @@ public class GetChart extends AppCompatActivity {
         });
 
         requestQueue.add(jsonObjectRequest);
+
+    }
+
+    String keys[] = new String[2];
+
+    private void logJSONobject(JSONObject jsonObject) {
+
+
+        // list available keys
+        Iterator<?> iterator = jsonObject.keys();
+        int i = 0;
+        while (iterator.hasNext()){
+            String key = (String) iterator.next();
+            keys[i] = key.toString();
+            Log.i("iterator", key);
+            i++;
+        }
+
+
+
+        // extract Meta Data from jsonObject
+        String metadata = "";
+        try {
+            metadata = jsonObject.getString("Meta Data").toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Log.i("Meta Data", metadata);
+
+        JSONObject timeSeries = null;
+        try {
+            timeSeries = jsonObject.getJSONObject((keys[1]));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Log.i("timeSeries", timeSeries.toString());
 
     }
 }
