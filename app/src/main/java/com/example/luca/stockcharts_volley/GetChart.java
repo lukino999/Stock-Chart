@@ -8,34 +8,22 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class GetChart extends AppCompatActivity {
 
     String url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=1min&apikey=M131GCLA5V2D33ZH";
 
+    JSONObject data;
 
-    private void getData(String url) {
-        // Instantiate the RequestQueue
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
 
-        // Request a string response from url
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Log.i("getData", response);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.i("getData", "Error");
-            }
-        });
-
-        requestQueue.add(stringRequest);
-
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +31,28 @@ public class GetChart extends AppCompatActivity {
         setContentView(R.layout.activity_get_chart);
 
         getData(url);
+
+
+    }
+
+    private void getData(String url) {
+
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                data = response;
+                Log.i("getData", data.toString());
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.i("getData", "Somehting went wrong");
+            }
+        });
+
+        requestQueue.add(jsonObjectRequest);
 
     }
 }
