@@ -3,8 +3,13 @@ package com.example.luca.stockcharts_volley;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -13,6 +18,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.github.mikephil.charting.charts.CandleStickChart;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.CandleData;
 import com.github.mikephil.charting.data.CandleDataSet;
@@ -26,26 +32,23 @@ import java.util.Iterator;
 
 public class GetChart extends AppCompatActivity {
 
-    private ArrayList<String> labels = new ArrayList<>();
-
-    private CandleStickChart chart;
 
     ArrayList<CandleEntry> candleEntries = new ArrayList<>();
-
-    // https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo
-    String url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo";
-
-
-
-    JSONObject data;
-
-
+    private ArrayList<String> labels = new ArrayList<>();
+    private CandleStickChart chart;
+    private String url;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_get_chart);
 
+        url = getIntent().getExtras().getString("url");
+        Log.i("url", url);
+
+        // initialize chart
         chart = findViewById(R.id.chart);
 
         getData(url);
@@ -53,27 +56,57 @@ public class GetChart extends AppCompatActivity {
     }
 
 
+
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        // get fullscreen
+        hide();
+    }
+
+
+
+    private void hide() {
+        // Hide UI first
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.hide();
+        }
+
+        // sets chart view to fullscreen
+        findViewById(R.id.chart).setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        );
+    }
+
+
+
     private void getData(String url) {
 
         chart.setNoDataText("Fetching data");
 
+        // instantiate and initialize volley requestQueue
         final RequestQueue requestQueue = Volley.newRequestQueue(this);
 
+        // instantiate jsonObjectRequest
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                data = response;
 
-                // extract timeseries part of the JSON
-                JSONObject timeSeries = parseJSON(response);
+                // extract timeSeries part of the JSON
+                JSONObject timeSeries = getTimeSeries(response);
 
-                // create dataset for the chart API
-                parseTimeseries(timeSeries);
+                // create chart
+                showChart(timeSeries);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.i("getData", "Something went wrong");
+                Toast.makeText(getApplicationContext(), "Unable to perform request", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -82,7 +115,8 @@ public class GetChart extends AppCompatActivity {
     }
 
 
-    private JSONObject parseJSON(JSONObject jsonObject) {
+
+    private JSONObject getTimeSeries(JSONObject jsonObject) {
 
         String keys[] = new String[2];
 
@@ -90,7 +124,7 @@ public class GetChart extends AppCompatActivity {
         // list available keys
         Iterator<?> iterator = jsonObject.keys();
         int i = 0;
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             String key = (String) iterator.next();
             keys[i] = key;
             i++;
@@ -111,13 +145,14 @@ public class GetChart extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        //parseTimeseries(timeSeries);
+        //showChart(timeSeries);
         return timeSeries;
 
     }
 
 
-    private void parseTimeseries(JSONObject timeSeries) {
+
+    private void showChart(JSONObject timeSeries) {
 
         // get all the keys
         Iterator<String> iterator = timeSeries.keys();
@@ -131,7 +166,7 @@ public class GetChart extends AppCompatActivity {
         }
 
         // reverse array order
-        for (int i = temp.size() - 1; i >= 0; i--){
+        for (int i = temp.size() - 1; i >= 0; i--) {
             labels.add(temp.get(i));
         }
 
@@ -151,8 +186,18 @@ public class GetChart extends AppCompatActivity {
         // initialize candleDataSet and pass candleEntries
         CandleDataSet dataSet = new CandleDataSet(candleEntries, "stock");
 
-        // instantiate CandleData passing dataSet and labels
+
+        // instantiate CandleData passing dataSet
         CandleData candleData = new CandleData(dataSet);
+
+        // set labels
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setValueFormatter(new MyXAxisValueFormatter(labels));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM_INSIDE);
+        xAxis.setGranularityEnabled(true);
+        xAxis.setGranularity(1f);
+        xAxis.setLabelRotationAngle(90f);
+
 
         // set colors
         dataSet.setDrawIcons(false);
@@ -165,14 +210,15 @@ public class GetChart extends AppCompatActivity {
         dataSet.setIncreasingPaintStyle(Paint.Style.FILL);
         dataSet.setNeutralColor(Color.BLUE);
 
+        chart.setDescription(null);
+
         chart.setData(candleData);
         chart.invalidate();
 
 
-
-
-
     }
+
+
 
     private void addEntry(JSONObject entryJSON, int i) {
         // get open
@@ -207,7 +253,10 @@ public class GetChart extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        candleEntries.add(i, new CandleEntry((float) i, high, low, open, close ));
+        candleEntries.add(i, new CandleEntry((float) i, high, low, open, close));
 
     }
+
+
+
 }
