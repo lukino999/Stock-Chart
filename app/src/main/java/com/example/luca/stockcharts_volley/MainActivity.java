@@ -23,11 +23,20 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
     // TODO: 15/03/2018 customise keyboard action button
+
+    // SpinnerMaps class contains the key values pairs to fill the spinners.
+    SpinnersMaps spinnersMaps;
+    HashMap<String, String> timeSeriesHash;
+
 
     // apiKey is still demo
     String urlBase = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=";
@@ -39,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     private Spinner timeSeries;
     final String SHARED_PREF_API_KEY = "apiKey";
 
-    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
         // if key is not demo, unlock full features
         if (apiKey != "demo") {
+            spinnersMaps = new SpinnersMaps();
             unlockFullFeatures();
         }
 
@@ -89,18 +98,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showTimeSeries() {
+
+        // make the timeSeries spinner visible
         timeSeries.setVisibility(View.VISIBLE);
 
-        List<String> timeSeriesArray = new ArrayList<>();
-        timeSeriesArray.add("function=TIME_SERIES_MONTHLY");
-        timeSeriesArray.add("function=TIME_SERIES_WEEKLY");
-        timeSeriesArray.add("function=TIME_SERIES_DAILY");
-        timeSeriesArray.add("function=TIME_SERIES_INTRADAY&interval=60min");
-        timeSeriesArray.add("function=TIME_SERIES_INTRADAY&interval=30min");
-        timeSeriesArray.add("function=TIME_SERIES_INTRADAY&interval=15min");
-        timeSeriesArray.add("function=TIME_SERIES_INTRADAY&interval=5min");
-        timeSeriesArray.add("function=TIME_SERIES_INTRADAY&interval=1min");
+        // get the timeseries hash map
+        timeSeriesHash = spinnersMaps.getTimeSeries();
 
+        // instantiate the list to be passed to the adapter
+        List<String> timeSeriesArray = new ArrayList<>();
+
+        // iterate through timeSeriesHash and add each key to the list
+        Set set = timeSeriesHash.entrySet();
+        Iterator iterator = set.iterator();
+        while (iterator.hasNext()) {
+            //Map.Entry mapEntry = (Map.Entry) iterator.next();
+            Map.Entry<String, String> mapEntry = (Map.Entry<String, String>) iterator.next();
+            Log.i("mapKey", mapEntry.getKey().toString());
+            timeSeriesArray.add(mapEntry.getKey().toString());
+        }
+
+
+        // instantiate the adapter
         ArrayAdapter<String> timeSeriesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, timeSeriesArray);
         timeSeriesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         timeSeries.setAdapter(timeSeriesAdapter);
