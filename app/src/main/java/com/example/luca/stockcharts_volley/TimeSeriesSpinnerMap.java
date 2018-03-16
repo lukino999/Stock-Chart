@@ -1,23 +1,22 @@
 package com.example.luca.stockcharts_volley;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 /**
  * Created by Luca on 16/03/2018.
  */
 
-class SpinnersMaps {
+class TimeSeriesSpinnerMap {
 
+    // timeSeries will contain the query functions relative to the different time resolutions
     LinkedHashMap<String, String> timeSeries = new LinkedHashMap<>();
 
-    public SpinnersMaps() {
+    public TimeSeriesSpinnerMap() {
         super();
 
         initTimeSeries();
-
-
     }
+
 
     private void initTimeSeries() {
         timeSeries.put("Monthly", "function=TIME_SERIES_MONTHLY");
@@ -30,7 +29,7 @@ class SpinnersMaps {
         timeSeries.put("1min", "function=TIME_SERIES_INTRADAY&interval=1min");
     }
 
-    public HashMap<String, String> getTimeSeries() {
+    public LinkedHashMap<String, String> getTimeSeries() {
         return timeSeries;
     }
 }

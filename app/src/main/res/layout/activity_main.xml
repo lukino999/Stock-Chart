@@ -54,13 +54,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toStartOf="parent"
+        android:visibility="invisible"
         />
 
     <Spinner
         android:id="@+id/symbol_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/search_symbol">
+        app:layout_constraintTop_toBottomOf="@id/search_symbol"
+        android:visibility="invisible">
 
     </Spinner>
 
