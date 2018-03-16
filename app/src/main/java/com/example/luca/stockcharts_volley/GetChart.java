@@ -105,7 +105,7 @@ public class GetChart extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.i("getData", "Something went wrong");
+                Log.i("getData", "Something went wrong: "+ error.getMessage());
                 Toast.makeText(getApplicationContext(), "Unable to perform request", Toast.LENGTH_LONG).show();
             }
         });

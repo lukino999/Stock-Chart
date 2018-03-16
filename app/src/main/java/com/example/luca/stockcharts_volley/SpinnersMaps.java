@@ -1,6 +1,7 @@
 package com.example.luca.stockcharts_volley;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * Created by Luca on 16/03/2018.
@@ -8,7 +9,7 @@ import java.util.HashMap;
 
 class SpinnersMaps {
 
-    HashMap<String, String> timeSeries = new HashMap<String, String>();
+    LinkedHashMap<String, String> timeSeries = new LinkedHashMap<>();
 
     public SpinnersMaps() {
         super();

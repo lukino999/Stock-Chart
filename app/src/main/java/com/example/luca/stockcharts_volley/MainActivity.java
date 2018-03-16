@@ -38,8 +38,8 @@ public class MainActivity extends AppCompatActivity {
     HashMap<String, String> timeSeriesHash;
 
 
-    // apiKey is still demo
-    String urlBase = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=";
+    // when apiKey is still demo the urlBase is:
+    String urlBase = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo";
 
     String apiKey;
 
@@ -67,13 +67,12 @@ public class MainActivity extends AppCompatActivity {
         // initialize timeSeries spinner
         timeSeries = findViewById(R.id.time_series);
 
+        spinnersMaps = new SpinnersMaps();
 
         // if key is not demo, unlock full features
         if (apiKey != "demo") {
-            spinnersMaps = new SpinnersMaps();
             unlockFullFeatures();
         }
-
     }
 
 
@@ -109,12 +108,10 @@ public class MainActivity extends AppCompatActivity {
         List<String> timeSeriesArray = new ArrayList<>();
 
         // iterate through timeSeriesHash and add each key to the list
-        Set set = timeSeriesHash.entrySet();
-        Iterator iterator = set.iterator();
+        Iterator iterator = timeSeriesHash.entrySet().iterator();
         while (iterator.hasNext()) {
             //Map.Entry mapEntry = (Map.Entry) iterator.next();
             Map.Entry<String, String> mapEntry = (Map.Entry<String, String>) iterator.next();
-            Log.i("mapKey", mapEntry.getKey().toString());
             timeSeriesArray.add(mapEntry.getKey().toString());
         }
 
@@ -130,11 +127,31 @@ public class MainActivity extends AppCompatActivity {
     public void getChartButtonClick(View view) {
 
         Intent i = new Intent(this, GetChart.class);
-        i.putExtra("url", urlBase + apiKey);
+        if (apiKey == "demo"){
+            i.putExtra("url", "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo");
+        } else {
+            String url = getUrl();
+            i.putExtra("url", url);
+
+        }
         startActivity(i);
 
     }
 
+    private String getUrl() {
+        // base url query
+        String url = "https://www.alphavantage.co/query?";
+
+        // get the function
+
+        String function = timeSeriesHash.get(timeSeries.getSelectedItem().toString());
+
+
+        // put it together
+        url += function + "&symbol=AAPL" + "&apikey=" + apiKey;
+
+        return url;
+    }
 
 
     public void checkAPIkeyButton(View view) {
