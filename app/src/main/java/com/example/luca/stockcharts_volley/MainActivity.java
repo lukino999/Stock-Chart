@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     final String SHARED_PREF_API_KEY = "apiKey";
 
     private LinkedHashMap<String, String> timeSeriesHash;
-    private LinkedHashMap<String, String> symbolsHash = new LinkedHashMap<>();
+    private LinkedHashMap<String, String> symbolsHash;
 
     // when apiKey is still demo the urlBase is:
     private String urlBase = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo";
@@ -105,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
     private void showSymbolsSpinner() {
 
         // read nasdaq.csv and build symbolsHash
-        getSymbolList();
+        symbolsHash = getSymbolHash();
 
         // initialise
         searchField = findViewById(R.id.search_symbol);
@@ -131,7 +130,9 @@ public class MainActivity extends AppCompatActivity {
         symbolSpinner.setAdapter(arrayAdapter);
     }
 
-    private void getSymbolList() {
+    private LinkedHashMap<String, String> getSymbolHash() {
+
+        LinkedHashMap<String, String> symbols = new LinkedHashMap<>();
 
         // get inputStream from /res/raw/nasdaq.csv
         InputStream inputStream = getResources().openRawResource(R.raw.nasdaq);
@@ -149,12 +150,13 @@ public class MainActivity extends AppCompatActivity {
         try {
             while ((line = reader.readLine()) != null) {
                 String[] value = line.split(",");
-                symbolsHash.put(value[0], value[1]);
+                symbols.put(value[0], value[1]);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        return symbols;
 
     }
 

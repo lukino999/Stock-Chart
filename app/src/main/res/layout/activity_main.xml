@@ -16,7 +16,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-
         />
 
     <android.support.v7.widget.AppCompatEditText
@@ -29,13 +28,8 @@
         app:layout_constraintStart_toStartOf="parent"
         android:textAlignment="center"
         android:hint="Enter your key here"
-
         android:imeActionLabel="actionGo"
         android:singleLine="true"
-
-
-
-
         />
 
     <android.support.v7.widget.AppCompatButton
@@ -46,7 +40,6 @@
         android:text=">"
         app:layout_constraintBottom_toTopOf="@id/getChartButton"
         app:layout_constraintEnd_toEndOf="parent"
-
         />
 
     <SearchView
@@ -71,8 +64,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@id/getChartButton"
-        android:visibility="invisible"
-        >
+        android:visibility="invisible">
 
     </Spinner>
 
