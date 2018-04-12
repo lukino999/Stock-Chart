@@ -6,10 +6,15 @@ import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -35,6 +40,12 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    ArrayAdapter<String> arrayAdapter;
+
+    ListView listView;
+
+    ArrayList<String> listViewItems;
+
     final String SHARED_PREF_API_KEY = "apiKey";
 
     private LinkedHashMap<String, String> timeSeriesHash;
@@ -49,17 +60,19 @@ public class MainActivity extends AppCompatActivity {
     private EditText apiKeyEditText;
     private SharedPreferences sharedPref;
     private Spinner timeSeries;
-    private SearchView searchField;
-    private Spinner symbolSpinner;
     // TimeSeriesSpinnerMap class contains the key values pairs to fill the spinner.
     private TimeSeriesSpinnerMap timeSeriesMap;
+    private ArrayAdapter<String> adapter;
+    private String symbol;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // TODO: 15/03/2018 customise keyboard action button
+        listViewItems = getArray();
+
+        listView = findViewById(R.id.list_view);
 
         // instantiates and assign sharedPref
         sharedPref = getPreferences(Context.MODE_PRIVATE);
@@ -79,8 +92,56 @@ public class MainActivity extends AppCompatActivity {
         // if key is not demo, unlock full features
         if (apiKey != "demo") {
             unlockFullFeatures();
+
+            adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listViewItems);
+            listView.setAdapter(adapter);
+
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                    consoleLog(listView.getItemAtPosition(i).toString());
+
+                }
+            });
         }
     }
+
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.item_search);
+
+        SearchView searchView = (SearchView) searchItem.getActionView();
+
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                consoleLog(s);
+                adapter.getFilter().filter(s);
+
+
+                return true;
+            }
+        });
+
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+
+    private void consoleLog(String s) {
+        Log.i("consoleLog", s);
+    }
+
 
     private void unlockFullFeatures() {
 
@@ -93,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.checkApiKeyButton).setVisibility(View.INVISIBLE);
 
         // show "Symbols" spinner
-        showSymbolsSpinner();
+        // showSymbolsSpinner();
 
         // show "Timeframes" spinner
         showTimeSeries();
@@ -106,13 +167,10 @@ public class MainActivity extends AppCompatActivity {
         // read nasdaq.csv and build symbolsHash
         symbolsHash = getSymbolHash();
 
-        // initialise
-        searchField = findViewById(R.id.search_symbol);
-        symbolSpinner = findViewById(R.id.symbol_spinner);
 
         // set symbol search and spinner as visible
-        searchField.setVisibility(View.VISIBLE);
-        symbolSpinner.setVisibility(View.VISIBLE);
+//        searchField.setVisibility(View.VISIBLE);
+//        symbolSpinner.setVisibility(View.VISIBLE);
 
         // instantiate list to be passed to the adapter
         List<String> symbolArray = new ArrayList<>();
@@ -125,9 +183,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // instantiate adapter
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, symbolArray);
+        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, symbolArray);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        symbolSpinner.setAdapter(arrayAdapter);
+        // symbolSpinner.setAdapter(arrayAdapter);
     }
 
     private LinkedHashMap<String, String> getSymbolHash() {
@@ -186,6 +244,72 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private LinkedHashMap<String, String> readCSV() {
+
+        LinkedHashMap<String, String> hashMap = new LinkedHashMap<>();
+
+        // get inputStream from /res/raw/nasdaq.csv
+        InputStream inputStream = getResources().openRawResource(R.raw.nasdaq);
+
+        // get stream reader
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+        try {
+            reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String line;
+
+        try {
+            while ((line = reader.readLine()) != null) {
+                String[] value = line.split(",");
+                hashMap.put(value[0], value[1]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return hashMap;
+
+    }
+
+    private ArrayList<String> getArray() {
+
+        LinkedHashMap<String, String> hashMap = new LinkedHashMap<>();
+
+        // get inputStream from /res/raw/nasdaq.csv
+        InputStream inputStream = getResources().openRawResource(R.raw.nasdaq);
+
+        // get stream reader
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+        try {
+            reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String line;
+
+        try {
+            while ((line = reader.readLine()) != null) {
+                String[] value = line.split(",");
+                hashMap.put(value[0], value[1]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ArrayList<String> items = new ArrayList<>();
+
+        Iterator iterator = hashMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, String> mapEntry = (Map.Entry<String, String>) iterator.next();
+            items.add(mapEntry.getKey() + " | " + mapEntry.getValue());
+        }
+
+        return items;
+    }
 
     public void getChartButtonClick(View view) {
 
@@ -193,11 +317,11 @@ public class MainActivity extends AppCompatActivity {
         Intent i = new Intent(this, GetChart.class);
 
         // conditional whether to use demo query
-        if (apiKey == "demo"){
+        if (apiKey == "demo") {
             i.putExtra("url", "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo");
         } else {
             //calls getUrl() which builds the query based on the spinners selections
-            String url = getUrl();
+            String url = getUrl(symbol);
             i.putExtra("url", url);
         }
 
@@ -205,7 +329,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    private String getUrl() {
+    private String getUrl(String s) {
 
         // base url query
         String url = "https://www.alphavantage.co/query?";
@@ -214,10 +338,10 @@ public class MainActivity extends AppCompatActivity {
         String function = timeSeriesHash.get(timeSeries.getSelectedItem().toString());
 
         // get the symbol
-        String symbol = symbolSpinner.getSelectedItem().toString();
+        // String symbol = symbolSpinner.getSelectedItem().toString();
 
         // put it together
-        url += function + "&symbol="+ symbol + "&apikey=" + apiKey;
+        url += function + "&symbol=" + s + "&apikey=" + apiKey;
 
         return url;
     }
@@ -252,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, testURL, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.i("Check API key response", response.toString() );
+                Log.i("Check API key response", response.toString());
                 boolean hasMetadata = response.has("Meta Data");
                 Log.i("response.has(Meta Data)", String.valueOf(hasMetadata));
 
@@ -269,12 +393,12 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("SharedPref", String.valueOf(sharedPref.getString(SHARED_PREF_API_KEY, "demo")));
 
                     // unlock full features
-                    Toast.makeText(getApplicationContext(), "Full features unlocked", Toast.LENGTH_SHORT ).show();
+                    Toast.makeText(getApplicationContext(), "Full features unlocked", Toast.LENGTH_SHORT).show();
 
                     unlockFullFeatures();
                 } else {
                     // notify user the key is not valid
-                    Toast.makeText(getApplicationContext(), "Invalid API key", Toast.LENGTH_SHORT ).show();
+                    Toast.makeText(getApplicationContext(), "Invalid API key", Toast.LENGTH_SHORT).show();
                 }
             }
         }, new Response.ErrorListener() {
